@@ -1,0 +1,18 @@
+# Compose file:
+# https://docs.docker.com/compose/compose-file/
+#
+# docker-compose up
+# docker-compose down
+# ----------------------------------------------------------------------------------------------------------------
+version: '3.7'
+services:
+  hello-world-microservice:
+    image: hello-world-microservice
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: wget http://localhost:8080/http-health-check || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

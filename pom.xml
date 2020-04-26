@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.rxmicro.examples</groupId>
+    <artifactId>hello-world-microservice</artifactId>
+    <version>0.1</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <rxmicro.version>0.3</rxmicro.version>
+
+        <!-- Maven plugins -->
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+        <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
+        <dockerfile-maven-plugin.version>1.4.13</dockerfile-maven-plugin.version>
+        <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
+
+        <!-- Docker runtime -->
+        <!-- https://github.com/testcontainers/testcontainers-java/issues/1424 -->
+        <org.testcontainers.junit.jupiter.version>1.10.7</org.testcontainers.junit.jupiter.version>
+        <org.testcontainers.logback-classic.version>1.2.3</org.testcontainers.logback-classic.version>
+    </properties>
+
+    <build>
+        <testSourceDirectory>src/it/java</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>src/it/resources</directory>
+            </testResource>
+        </testResources>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <release>11</release>
+                        <annotationProcessorPaths>
+                            <annotationProcessorPath>
+                                <groupId>io.rxmicro</groupId>
+                                <artifactId>rxmicro-annotation-processor</artifactId>
+                                <version>${rxmicro.version}</version>
+                            </annotationProcessorPath>
+                        </annotationProcessorPaths>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>source-compile</id>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
+                            <configuration>
+                                <annotationProcessors>
+                                    <annotationProcessor>
+                                        io.rxmicro.annotation.processor.RxMicroAnnotationProcessor
+                                    </annotationProcessor>
+                                </annotationProcessors>
+                                <generatedSourcesDirectory>
+                                    ${project.build.directory}/generated-sources/
+                                </generatedSourcesDirectory>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>test-compile</id>
+                            <goals>
+                                <goal>testCompile</goal>
+                            </goals>
+                            <configuration>
+                                <annotationProcessors>
+                                    <annotationProcessor>
+                                        io.rxmicro.annotation.processor.RxMicroTestsAnnotationProcessor
+                                    </annotationProcessor>
+                                </annotationProcessors>
+                                <generatedTestSourcesDirectory>
+                                    ${project.build.directory}/generated-test-sources/
+                                </generatedTestSourcesDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                    <configuration>
+                        <properties>
+                            <!-- https://junit.org/junit5/docs/5.5.1/api/org/junit/jupiter/api/Timeout.html -->
+                            <configurationParameters>
+                                junit.jupiter.execution.timeout.default = 60
+                                junit.jupiter.execution.timeout.mode = disabled_on_debug
+                            </configurationParameters>
+                        </properties>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>compile</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>${dockerfile-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <repository>hello-world-microservice</repository>
+                    <tag>latest</tag>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${maven-failsafe-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.rxmicro</groupId>
+            <artifactId>rxmicro-rest-server-netty</artifactId>
+            <version>${rxmicro.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.rxmicro</groupId>
+            <artifactId>rxmicro-rest-server-exchange-json</artifactId>
+            <version>${rxmicro.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.rxmicro</groupId>
+            <artifactId>rxmicro-monitoring</artifactId>
+            <version>${rxmicro.version}</version>
+        </dependency>
+
+        <!-- Test dependencies -->
+
+        <dependency>
+            <groupId>io.rxmicro</groupId>
+            <artifactId>rxmicro-test-junit</artifactId>
+            <version>${rxmicro.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rxmicro</groupId>
+            <artifactId>rxmicro-http-client-jdk</artifactId>
+            <version>${rxmicro.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rxmicro</groupId>
+            <artifactId>rxmicro-rest-client-exchange-json</artifactId>
+            <version>${rxmicro.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Docker test environment -->
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${org.testcontainers.junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${org.testcontainers.logback-classic.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
