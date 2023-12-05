@@ -21,7 +21,7 @@
         <!-- Docker runtime -->
         <!-- https://github.com/testcontainers/testcontainers-java/issues/1424 -->
         <org.testcontainers.junit.jupiter.version>1.10.7</org.testcontainers.junit.jupiter.version>
-        <org.testcontainers.logback-classic.version>1.2.3</org.testcontainers.logback-classic.version>
+        <org.testcontainers.logback-classic.version>1.2.13</org.testcontainers.logback-classic.version>
     </properties>
 
     <build>
